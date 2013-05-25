@@ -3,79 +3,164 @@
  * Module dependencies.
  */
 
-var express = require('express')
-  , hbs = require('hbs')
-  , path = require('path');
+var bind = require('bind')
+  , each = require('each')
+  , Emitter = require('emitter')
+  , on = require('event').bind
+  , query = require('query')
+  , uid = require('uid');
 
 
 /**
- * App.
+ * The HN object is really just an emitter for listening to button events.
  */
 
-var build = path.resolve(__dirname, 'build');
-
-var app = module.exports = express()
-  .engine('html', hbs.__express)
-  .set('views', build)
-  .use(express.static(build));
+var HN = new Emitter();
 
 
 /**
- * The button's iframe page.
+ * Origin of the server.
  */
 
-app.get('/', function (req, res, next) {
-  var q = req.query
-    , url = q.url
-    , title = q.title
-    , count = q.count
-    , style = q.style
-    , font = q.font;
+var origin = location.protocol + '//localhost:5000';
 
-  if (!url || !title) res.redirect('https://github.com/segmentio/hn-button');
 
-  // TODO: actually do stuff here.
+/**
+ * When an iframe first loads it send along its width, so we can resize the
+ * <iframe> in the DOM. This way it never takes up more space than it actually
+ * needs, so multiple button in a row are next to each other.
+ */
 
-  var votes = 192
-    , text = votes ? 'Vote' : 'Submit'
-    , href = 'TODO';
-
-  res.render('hn-iframe.min.html', {
-    text       : text,
-    action     : text.toLowerCase(),
-    href       : href,
-    votes      : number(votes),
-    count      : count,
-    vertical   : count === 'vertical',
-    horizontal : count === 'horizontal',
-    style      : style,
-    font       : font
-  });
+HN.on('load', function (event) {
+  var iframe = event.target;
+  iframe.width = Math.ceil(event.width); // browsers round weirdly, ceil helps
 });
 
 
 /**
- * Listen.
- */
-
-var port = process.env.PORT || 5000;
-
-app.listen(port, function () {
-  console.log('Listening on ' + port + '...');
-});
-
-
-/**
- * Formats a number of votes into a nice string.
+ * Initialize a button. Generate a unique ID that we can use when messaging
+ * between windows to identify the sender.
  *
- * @param {Int} votes  The number of votes.
- * @return {String}    The number of votes, formatted nicely.
+ * @param {Element} button  The button's element in the DOM.
  */
 
-function number (int) {
-  if (int > 999) {
-    return Math.round(int / 100) / 10 + 'k';
-  } else {
-    return int + '';
-  }
+function Button (a) {
+  this.id = 'hn-button-' + uid();
+  on(window, 'message', bind(this, this.onMessage));
+  this.render(a);
 }
+
+
+/**
+ * Render a button.
+ *
+ * @param {Element} a  The original <a> element that was on the page.
+ */
+
+Button.prototype.render = function (a) {
+  // Grab some settings from the <a>.
+  var options = {
+    title : a.getAttribute('data-title') || document.title,
+    url   : a.getAttribute('data-url') || window.location.href,
+    style : a.getAttribute('data-style'),
+    count : a.getAttribute('data-count')
+  };
+
+  // Create the iframe element that we will replace the <a> with.
+  var iframe = this.iframe = document.createElement('iframe');
+
+  // Set the source based on data attributes, with fallbacks.
+  iframe.src = src(options);
+
+  // Add the id, name, class, and I think it's nice to see the same attributes
+  // you set on the <a> stay on the iframe.
+  iframe.id = iframe.name = this.id;
+  iframe.className = 'hn-button';
+  iframe.setAttribute('data-title', options.title);
+  iframe.setAttribute('data-url', options.url);
+  if (options.style) iframe.setAttribute('data-style', options.style);
+  if (options.count) iframe.setAttribute('data-count', options.count);
+
+  // Give it a title for accessibility.
+  iframe.title = 'Hacker News Button';
+
+  // Set the proper width and height, depending on the orientation.
+  iframe.height = options.count === 'vertical' ? 62 : 20; // standard
+  iframe.width = 100; // a best guess, real width applied on load
+
+  // Set other required attributes.
+  iframe.frameBorder = 0; // removes default iframe border
+
+  // Replace the <a> with the iframe.
+  a.parentNode.insertBefore(iframe, a);
+  a.parentNode.removeChild(a);
+};
+
+
+/**
+ * Listen for messages coming from our iframe's window and proxy them to the
+ * global HN object so others can react.
+ *
+ * @param {MessageEvent} message  The message from the postMessage API.
+ */
+
+Button.prototype.onMessage = function (message) {
+  // make sure we're listening for the right thing
+  if (message.origin !== origin) return;
+  if (message.data.id !== this.id) return;
+
+  var event = message.data.event
+    , data = message.data.data;
+
+  // add properties so the listener can differentiate
+  data.type = event;
+  data.id = this.id;
+  data.target = this.iframe;
+
+  // emit on the global HN object
+  HN.emit(event, data);
+};
+
+
+/**
+ * Helper to render an iframe src href from an options dictionary.
+ *
+ * @param {Object} options  The options to use.
+ * @return {String}         The iframe `src` href.
+ */
+
+function src (options) {
+  var query = '';
+  each(options, function (key, value) {
+    query += query ? '&' : '?';
+    if (value) query += key + '=' + encodeURIComponent(value);
+  });
+  return origin + query;
+}
+
+
+/**
+ * Kick everything off, initializing all the `.hn-button`'s on the page.
+ */
+
+each(query.all('.hn-button'), function (a) {
+  new Button (a);
+});
+
+
+/**
+ * Replay existing queued messages into the real HN object.
+ */
+
+if (window.HN) while (window.HN.length > 0) {
+  var item = window.HN.shift();
+  var method = item.shift();
+  if (HN[method]) HN[method].apply(HN, item);
+}
+
+
+/**
+ * Module exports.
+ */
+
+module.exports = HN;

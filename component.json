@@ -1,5 +1,5 @@
 {
-  "name": "hn-button",
+  "name": "hn-button.js",
   "dependencies": {
     "component/bind": "*",
     "component/each": "*",
@@ -9,7 +9,6 @@
     "matthewmueller/uid": "*"
   },
   "scripts": [
-    "lib/hn-button.js"
-  ],
-  "main": "lib/hn-button.js"
+    "index.js"
+  ]
 }

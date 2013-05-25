@@ -1,12 +1,5 @@
 ;(function(){
 
-
-/**
- * hasOwnProperty.
- */
-
-var has = Object.prototype.hasOwnProperty;
-
 /**
  * Require the given path.
  *
@@ -83,10 +76,10 @@ require.resolve = function(path) {
 
   for (var i = 0; i < paths.length; i++) {
     var path = paths[i];
-    if (has.call(require.modules, path)) return path;
+    if (require.modules.hasOwnProperty(path)) return path;
   }
 
-  if (has.call(require.aliases, index)) {
+  if (require.aliases.hasOwnProperty(index)) {
     return require.aliases[index];
   }
 };
@@ -140,7 +133,7 @@ require.register = function(path, definition) {
  */
 
 require.alias = function(from, to) {
-  if (!has.call(require.modules, from)) {
+  if (!require.modules.hasOwnProperty(from)) {
     throw new Error('Failed to alias "' + from + '", it does not exist');
   }
   require.aliases[to] = from;
@@ -202,7 +195,7 @@ require.relative = function(parent) {
    */
 
   localRequire.exists = function(path) {
-    return has.call(require.modules, localRequire.resolve(path));
+    return require.modules.hasOwnProperty(localRequire.resolve(path));
   };
 
   return localRequire;
@@ -611,7 +604,7 @@ function uid(len) {
 }
 
 });
-require.register("hn-button/lib/hn-button.js", function(exports, require, module){
+require.register("hn-button.js/index.js", function(exports, require, module){
 
 /**
  * Module dependencies.
@@ -626,10 +619,10 @@ var bind = require('bind')
 
 
 /**
- * Module exports, just an emitter for listening to button events.
+ * The HN object is really just an emitter for listening to button events.
  */
 
-var HN = module.exports = new Emitter();
+var HN = new Emitter();
 
 
 /**
@@ -646,7 +639,7 @@ var origin = location.protocol + '//localhost:5000';
  */
 
 HN.on('load', function (event) {
-  var iframe = event.iframe;
+  var iframe = event.target;
   iframe.width = Math.ceil(event.width); // browsers round weirdly, ceil helps
 });
 
@@ -726,9 +719,10 @@ Button.prototype.onMessage = function (message) {
   var event = message.data.event
     , data = message.data.data;
 
-  // add this iframe's properties so the listener can differentiate
+  // add properties so the listener can differentiate
+  data.type = event;
   data.id = this.id;
-  data.iframe = this.iframe;
+  data.target = this.iframe;
 
   // emit on the global HN object
   HN.emit(event, data);
@@ -759,27 +753,43 @@ function src (options) {
 each(query.all('.hn-button'), function (a) {
   new Button (a);
 });
-});
-require.alias("component-bind/index.js", "hn-button/deps/bind/index.js");
 
-require.alias("component-each/index.js", "hn-button/deps/each/index.js");
+
+/**
+ * Replay existing queued messages into the real HN object.
+ */
+
+if (window.HN) while (window.HN.length > 0) {
+  var item = window.HN.shift();
+  var method = item.shift();
+  if (HN[method]) HN[method].apply(HN, item);
+}
+
+
+/**
+ * Module exports.
+ */
+
+module.exports = HN;
+});
+require.alias("component-bind/index.js", "hn-button.js/deps/bind/index.js");
+
+require.alias("component-each/index.js", "hn-button.js/deps/each/index.js");
 require.alias("component-type/index.js", "component-each/deps/type/index.js");
 
-require.alias("component-emitter/index.js", "hn-button/deps/emitter/index.js");
+require.alias("component-emitter/index.js", "hn-button.js/deps/emitter/index.js");
 require.alias("component-indexof/index.js", "component-emitter/deps/indexof/index.js");
 
-require.alias("component-event/index.js", "hn-button/deps/event/index.js");
+require.alias("component-event/index.js", "hn-button.js/deps/event/index.js");
 
-require.alias("component-query/index.js", "hn-button/deps/query/index.js");
+require.alias("component-query/index.js", "hn-button.js/deps/query/index.js");
 
-require.alias("matthewmueller-uid/index.js", "hn-button/deps/uid/index.js");
-
-require.alias("hn-button/lib/hn-button.js", "hn-button/index.js");
+require.alias("matthewmueller-uid/index.js", "hn-button.js/deps/uid/index.js");
 
 if (typeof exports == "object") {
-  module.exports = require("hn-button");
+  module.exports = require("hn-button.js");
 } else if (typeof define == "function" && define.amd) {
-  define(function(){ return require("hn-button"); });
+  define(function(){ return require("hn-button.js"); });
 } else {
-  window["HN"] = require("hn-button");
+  this["HN"] = require("hn-button.js");
 }})();
