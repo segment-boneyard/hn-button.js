@@ -8,6 +8,10 @@
     "component/query": "*",
     "matthewmueller/uid": "*"
   },
+  "development": {
+    "component/assert": "*",
+    "component/type": "*"
+  },
   "scripts": [
     "index.js"
   ]

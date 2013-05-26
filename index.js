@@ -22,7 +22,7 @@ var HN = new Emitter();
  * Origin of the server.
  */
 
-var origin = location.protocol + '//localhost:5000';
+var origin = location.protocol + '//hn-button.herokuapp.com';
 
 
 /**
