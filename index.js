@@ -38,6 +38,15 @@ HN.on('load', function (event) {
 
 
 /**
+ * Initialize a button element.
+ */
+
+HN.initialize = function (a) {
+  new Button(a);
+};
+
+
+/**
  * Initialize a button. Generate a unique ID that we can use when messaging
  * between windows to identify the sender.
  *
@@ -143,9 +152,7 @@ function src (options) {
  * Kick everything off, initializing all the `.hn-button`'s on the page.
  */
 
-each(query.all('.hn-button'), function (a) {
-  new Button (a);
-});
+each(query.all('.hn-button'), HN.initialize);
 
 
 /**

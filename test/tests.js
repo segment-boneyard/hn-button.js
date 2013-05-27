@@ -10,20 +10,28 @@ describe('hn-button.js', function () {
     assert(document.querySelector('.hn-button').tagName === 'IFRAME');
   });
 
-  it('should have an on method', function () {
-    assert(type(HN.on) === 'function');
+  describe('initialize', function () {
+    it('should have an initialize method', function () {
+      assert(type(HN.initialize) === 'function');
+    });
   });
 
-  it('should have an once method', function () {
-    assert(type(HN.once) === 'function');
-  });
+  describe('emitter', function () {
+    it('should have an on method', function () {
+      assert(type(HN.on) === 'function');
+    });
 
-  it('should have an off method', function () {
-    assert(type(HN.off) === 'function');
-  });
+    it('should have an once method', function () {
+      assert(type(HN.once) === 'function');
+    });
 
-  it('should have an emit method', function () {
-    assert(type(HN.emit) === 'function');
+    it('should have an off method', function () {
+      assert(type(HN.off) === 'function');
+    });
+
+    it('should have an emit method', function () {
+      assert(type(HN.emit) === 'function');
+    });
   });
 
 });
