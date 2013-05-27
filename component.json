@@ -1,5 +1,5 @@
 {
-  "name": "hn-button.js",
+  "name": "hn-button",
   "dependencies": {
     "component/bind": "*",
     "component/each": "*",

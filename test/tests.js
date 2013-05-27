@@ -6,7 +6,7 @@ describe('hn-button.js', function () {
 
   it('should convert links on initialize', function () {
     assert(document.querySelector('.hn-button').tagName === 'A');
-    HN = require('hn-button.js');
+    HN = require('hn-button');
     assert(document.querySelector('.hn-button').tagName === 'IFRAME');
   });
 
