@@ -655,7 +655,7 @@ HN.initialize = function (a) {
 
 function Button (a) {
   var host = a.getAttribute('data-host') || 'hn-button.herokuapp.com';
-  this.origin = location.protocol + '//';
+  this.origin = location.protocol + '//' + host;
   this.id = 'hn-button-' + uid();
   on(window, 'message', bind(this, this.onMessage));
   this.render(a);
