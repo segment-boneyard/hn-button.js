@@ -1,5 +1,7 @@
 {
   "name": "hn-button",
+  "repo": "segmentio/hn-button.js",
+  "version": "1.0.0",
   "dependencies": {
     "component/bind": "*",
     "component/each": "*",

@@ -19,13 +19,6 @@ var HN = new Emitter();
 
 
 /**
- * Origin of the server.
- */
-
-var origin = location.protocol + '//hn-button.herokuapp.com';
-
-
-/**
  * When an iframe first loads it send along its width, so we can resize the
  * <iframe> in the DOM. This way it never takes up more space than it actually
  * needs, so multiple button in a row are next to each other.
@@ -55,6 +48,7 @@ HN.initialize = function (a) {
 
 function Button (a) {
   this.id = 'hn-button-' + uid();
+  this.host = a.getAttribute('data-host') || 'hn-button.herokuapp.com';
   on(window, 'message', bind(this, this.onMessage));
   this.render(a);
 }
@@ -69,10 +63,11 @@ function Button (a) {
 Button.prototype.render = function (a) {
   // Grab some settings from the <a>.
   var options = {
-    title : a.getAttribute('data-title') || document.title,
-    url   : a.getAttribute('data-url') || window.location.href,
-    style : a.getAttribute('data-style'),
-    count : a.getAttribute('data-count')
+    title: a.getAttribute('data-title') || document.title,
+    url: a.getAttribute('data-url') || window.location.href,
+    style: a.getAttribute('data-style'),
+    count: a.getAttribute('data-count'),
+    host: this.host
   };
 
   // Create the iframe element that we will replace the <a> with.
@@ -115,7 +110,7 @@ Button.prototype.render = function (a) {
 
 Button.prototype.onMessage = function (message) {
   // make sure we're listening for the right thing
-  if (message.origin !== origin) return;
+  if (message.origin !== this.host) return;
   if (message.data.id !== this.id) return;
 
   var event = message.data.event
@@ -140,10 +135,14 @@ Button.prototype.onMessage = function (message) {
 
 function src (options) {
   var query = '';
+  var origin = location.protocol + '//' + options.host;
+
   each(options, function (key, value) {
+    if ('host' == key) return;
     query += query ? '&' : '?';
     if (value) query += key + '=' + encodeURIComponent(value);
   });
+
   return origin + query;
 }
 
