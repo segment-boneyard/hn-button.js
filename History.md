@@ -1,4 +1,8 @@
 
+1.0.1 - 2014/03/25
+------------------
+* Fixed host logic for messages.
+
 1.0.0 - 2014/03/25
 ------------------
 * Added a `data-host` attribute for easier testing.
