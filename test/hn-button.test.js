@@ -794,7 +794,7 @@ Button.prototype.render = function (a) {\n\
 \n\
 Button.prototype.onMessage = function (message) {\n\
   // make sure we're listening for the right thing\n\
-  if (message.origin !== this.host) return;\n\
+  if (message.origin !== this.origin) return;\n\
   if (message.data.id !== this.id) return;\n\
 \n\
   var event = message.data.event\n\

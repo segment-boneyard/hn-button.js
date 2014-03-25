@@ -110,7 +110,7 @@ Button.prototype.render = function (a) {
 
 Button.prototype.onMessage = function (message) {
   // make sure we're listening for the right thing
-  if (message.origin !== this.host) return;
+  if (message.origin !== this.origin) return;
   if (message.data.id !== this.id) return;
 
   var event = message.data.event
