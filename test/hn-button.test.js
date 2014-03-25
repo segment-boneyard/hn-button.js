@@ -731,8 +731,9 @@ HN.initialize = function (a) {\n\
  */\n\
 \n\
 function Button (a) {\n\
+  var host = a.getAttribute('data-host') || 'hn-button.herokuapp.com';\n\
+  this.origin = location.protocol + '//';\n\
   this.id = 'hn-button-' + uid();\n\
-  this.host = a.getAttribute('data-host') || 'hn-button.herokuapp.com';\n\
   on(window, 'message', bind(this, this.onMessage));\n\
   this.render(a);\n\
 }\n\
@@ -750,15 +751,14 @@ Button.prototype.render = function (a) {\n\
     title: a.getAttribute('data-title') || document.title,\n\
     url: a.getAttribute('data-url') || window.location.href,\n\
     style: a.getAttribute('data-style'),\n\
-    count: a.getAttribute('data-count'),\n\
-    host: this.host\n\
+    count: a.getAttribute('data-count')\n\
   };\n\
 \n\
   // Create the iframe element that we will replace the <a> with.\n\
   var iframe = this.iframe = document.createElement('iframe');\n\
 \n\
   // Set the source based on data attributes, with fallbacks.\n\
-  iframe.src = src(options);\n\
+  iframe.src = this.origin + stringify(options);\n\
 \n\
   // Add the id, name, class, and I think it's nice to see the same attributes\n\
   // you set on the <a> stay on the iframe.\n\
@@ -811,23 +811,20 @@ Button.prototype.onMessage = function (message) {\n\
 \n\
 \n\
 /**\n\
- * Helper to render an iframe src href from an options dictionary.\n\
+ * Stringify a querystring from an options dictionary.\n\
  *\n\
  * @param {Object} options  The options to use.\n\
  * @return {String}         The iframe `src` href.\n\
  */\n\
 \n\
-function src (options) {\n\
+function stringify (options) {\n\
   var query = '';\n\
-  var origin = location.protocol + '//' + options.host;\n\
-\n\
   each(options, function (key, value) {\n\
     if ('host' == key) return;\n\
     query += query ? '&' : '?';\n\
     if (value) query += key + '=' + encodeURIComponent(value);\n\
   });\n\
-\n\
-  return origin + query;\n\
+  return query;\n\
 }\n\
 \n\
 \n\
